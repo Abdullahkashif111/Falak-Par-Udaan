@@ -1,0 +1,87 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI; // For UI elements
+
+public class PlayerController : MonoBehaviour
+{
+    // Player movement settings
+    public float jumpForce = 5f;       // Force for jumping
+    public Rigidbody2D rb;             // Rigidbody2D component for the player
+    public bool isAlive = true;        // Game state to check if the player is alive
+
+    // UI Elements
+    public Text scoreText;             // Display score on the screen
+    public GameObject gameOverPanel;   // Game Over screen UI panel
+
+    // Score and Power-Up
+    private int score = 0;             // Player's score
+    private bool hasShield = false;    // Track if the player has a shield power-up
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        UpdateScore();
+    }
+
+    void Update()
+    {
+        // Player jumps on mouse click or space key
+        if (isAlive && (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space)))
+        {
+            Jump();
+        }
+    }
+
+    void Jump()
+    {
+        rb.velocity = Vector2.up * jumpForce;
+    }
+
+    // Handle collisions with obstacles
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Obstacle"))
+        {
+            if (hasShield)
+            {
+                Destroy(collision.gameObject); // Destroy obstacle if shield is active
+                hasShield = false;             // Remove shield after use
+            }
+            else
+            {
+                isAlive = false;
+                GameOver();
+            }
+        }
+    }
+
+    // Handle power-ups and coins
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Coin"))
+        {
+            score += 10;             // Increase score by 10
+            UpdateScore();
+            Destroy(other.gameObject);
+        }
+        else if (other.CompareTag("Shield"))
+        {
+            hasShield = true;        // Activate shield power-up
+            Destroy(other.gameObject);
+        }
+    }
+
+    // Update score text on the UI
+    void UpdateScore()
+    {
+        scoreText.text = "Score: " + score;
+    }
+
+    // Game over function
+    void GameOver()
+    {
+        Debug.Log("Game Over!");
+        gameOverPanel.SetActive(true); // Show game over screen
+    }
+}
